@@ -52,10 +52,10 @@ const Formatter& PAMFormatter::operator<<(const Image& img)const {
 		for (int j = 0; j < w; j++) {
 			Pixel curr = img.get(i, j);
 
-			file << curr.getR();
-			file << curr.getG();
-			file << curr.getB();
-			file << (int)round(255.0 / 100.0 * curr.getA());
+			file << (unsigned char)curr.getR();
+			file << (unsigned char)curr.getG();
+			file << (unsigned char)curr.getB();
+			file << (unsigned char)((int)round(255.0 / 100.0 * curr.getA()));
 		}
 	}
 

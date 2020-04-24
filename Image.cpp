@@ -254,22 +254,23 @@ void Image::load(const string& path) {
 	width = stoi(matches[1]);
 	height = stoi(matches[2]);
 
-	reg = "\\{([^\\}]*)\\}";
-
-	sregex_iterator m1(matches[3].begin(), matches[3].end(), reg);
 	sregex_iterator m2;
 
+
+	reg = "\\{([^\\}]*)\\}";
+	sregex_iterator m1(matches[3].begin(), matches[3].end(), reg);
 	while (m1!=m2) {
 		layers.push_back(Layer(width,height));
 		layers.back().parse((*m1)[1]);
 		++m1;
 	}
+	reg = "\\{(\\\"name\\\":\\\"(?:\\\\\\\"|\\\\\\\\|[^\\\\\\\"])*\\\",\\\"c\\\":\\[(?:(?:(?R)|(?:(?:[0-9]*,?)*)),?)*\\])\\}";
 	m1 = sregex_iterator(matches[4].begin(), matches[4].end(), reg);
 	while (m1!=m2){
 		operations.push_back(CompositeOperation(m1->str(1)));
 		++m1;
 	}
-	reg = "\\{(.*)\\}";
+	reg = "\\{(\\\"name\\\":\\\"(?:\\\\\\\"|\\\\\\\\|[^\\\\\\\"])*\\\",\\\"rects\\\":\\[[^\\]]*\\])\\}";
 	m1 = sregex_iterator(matches[5].begin(), matches[5].end(), reg);
 	while (m1!=m2) {
 		selections.push_back(Selection());
@@ -288,6 +289,9 @@ const vector<CompositeOperation>& Image::getOperations() const { return operatio
 bool Image::deleteSelection(const string& selectionName) {
 	for (auto i = selections.begin(); i != selections.end(); ++i) {
 		if (i->getName() == selectionName) {
+			if (activeSelection == &(*i)) {
+				activeSelection = nullptr;
+			}
 			selections.erase(i);
 			return true;
 		}

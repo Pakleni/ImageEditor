@@ -18,7 +18,7 @@ class Image
 	vector<CompositeOperation> operations;
 
 	Selection* activeSelection = nullptr;
-	bool saved = 0;
+	bool saved = 1;
 public:
 
 	class iterator {

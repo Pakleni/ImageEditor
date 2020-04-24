@@ -68,8 +68,8 @@ void Layer::parse(const string& str){
 	regex  reg("\\[([0-9]*),([0-9]*),([0-9]*),([0-9]*)\\]");
 
 
-	boost::sregex_iterator m1(str.begin(), str.end(), reg);
-	boost::sregex_iterator m2;
+	sregex_iterator m1(str.begin(), str.end(), reg);
+	sregex_iterator m2;
 	
 	for (int i = 0; i < height; ++i) {
 		for (int j = 0; j < width; ++j) {

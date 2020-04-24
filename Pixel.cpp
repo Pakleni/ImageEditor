@@ -62,10 +62,10 @@ Pixel operator*(int c, const Pixel& p) {
 	return p * c;
 }
 
-void Pixel::log() {
-	r = ::log(r);
-	g = ::log(g);
-	b = ::log(b);
+void Pixel::log(double c) {
+	r = ::log(r)/::log(c);
+	g = ::log(g)/::log(c);
+	b = ::log(b)/::log(c);
 }
 
 void Pixel::min(int c){

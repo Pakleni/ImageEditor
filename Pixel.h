@@ -25,7 +25,7 @@ public:
 
 	void round();
 
-	void log();
+	void log(double constant);
 	void abs();
 	void min(int constant);
 	void max(int constant);

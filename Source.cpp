@@ -14,7 +14,6 @@ int menu() {
 
 	int c = 0;
 	//UCITAVANJE SLIKE
-	cout << "0. Slika = Slika + funkcija" << endl;
 	cout << "1. Ucitaj sliku" << endl;
 	cout << "2. Ucitaj Projekat" << endl;
 	//RAD SA SLOJEVIMA
@@ -30,12 +29,13 @@ int menu() {
 	cout << "10. Izvrsi Operaciju" << endl;
 	cout << "11. Dodaj Operaciju" << endl;
 	cout << "12. Ucitaj Operaciju" << endl;
+	cout << "13. Sacuvaj Operaciju" << endl;
 	//EKSPORTOVANJE SLIKE
-	cout << "13. Sacuvaj Sliku" << endl;
+	cout << "14. Sacuvaj Sliku" << endl;
 	//SNIMANJE PROJEKTA
-	cout << "14. Snimi Projekat" << endl;
+	cout << "15. Snimi Projekat" << endl;
 	//KRAJ RADA
-	cout << "15. Kraj rada" << endl;
+	cout << "16. Kraj rada" << endl;
 
 	while (!(cin >> c)) {
 		cerr << "Unesi opet" << endl;cin.clear();
@@ -47,27 +47,27 @@ int menu() {
 
 void loadImage(Image& img) {
 	try {
-		cout << "Koji format?" << endl;
-		cout << "1. BMP" << endl;
-		cout << "2. PAM" << endl;
-
-		int c;
-		while (!(cin >> c) || c < 1 || c > 2) {
-			cerr << "Unesi opet" << endl;cin.clear();
-			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-		}
-
 		string path;
 		cout << "Unesi put do slike" << endl;
 		cin >> path;
 
-		if (c == 1) {
+		size_t bmp, pam, json;
+
+		bmp = path.find(".bmp");
+		pam = path.find(".pam");
+		json = path.find(".json");
+
+		if (bmp != string::npos && (pam == string::npos || pam < bmp) && (json == string::npos || json < bmp)) {
 			BMPFormatter form(path);
 			form >> img;
 		}
-		else {
+		else if (pam != string::npos && (json == string::npos || json < pam)) {
 			PAMFormatter form(path);
 			form >> img;
+		}
+		else {
+			cerr << "Nevalidna ekstenzija" << endl;
+			return;
 		}
 	}
 	catch (InvalidFile& e) {
@@ -111,26 +111,27 @@ void addLayer(Image& img) {
 
 
 		if (c == 1) {
-			cout << "Koji format?" << endl;
-			cout << "1. BMP" << endl;
-			cout << "2. PAM" << endl;
-
-			while (!(cin >> c) || c < 1 || c > 2) {
-				cerr << "Unesi opet" << endl; cin.clear();
-				cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-			}
-
 			string path;
 			cout << "Unesi put do slike" << endl;
 			cin >> path;
 
-			if (c == 1) {
+			size_t bmp, pam, json;
+
+			bmp = path.find(".bmp");
+			pam = path.find(".pam");
+			json = path.find(".json");
+
+			if (bmp != string::npos && (pam == string::npos || pam < bmp) && (json == string::npos || json < bmp)) {
 				BMPFormatter form(path);
 				form >> layer;
 			}
-			else {
+			else if (pam != string::npos && (json == string::npos || json < pam)) {
 				PAMFormatter form(path);
 				form >> layer;
+			}
+			else {
+				cerr << "Nevalidna ekstenzija" << endl;
+				return;
 			}
 		}
 		else if (c == 2) {
@@ -326,16 +327,46 @@ void doOperation(Image& img) {
 	cout << "13. Pretvori u sivo" << endl;
 	cout << "14. Pretvori u crno/belo" << endl;
 	cout << "15. Mediana" << endl;
-	cout << "16. Kompozitna" << endl;
+	cout << "16. Popuni" << endl;
+	cout << "17. Kompozitna" << endl;
 
 	unsigned c;
 
-	while (!(cin >> c) || c < 1 || c > 16) {
+	while (!(cin >> c) || c < 1 || c > 17) {
 		cerr << "Unesi opet" << endl; cin.clear();
 		cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	}
 
-	if ( c!= 16) basicOperations[c - 1]->run(img);
+	if (c != 17) {
+		if (c >= 1 && c <= 6 || c == 10 || c == 11) {
+			int d;
+			cin >> d;
+			if (c == 1) { Add(d).run(img); }
+			else if (c == 2) { Subtract(d).run(img); }
+			else if (c == 3) { ReverseSubtract(d).run(img); }
+			else if (c == 4) { Multiply(d).run(img); }
+			else if (c == 5) { Divide(d).run(img); }
+			else if (c == 6) { ReverseDivide(d).run(img); }
+			else if (c == 10) { Minimum(d).run(img); }
+			else if (c == 11) { Maximum(d).run(img); }
+		}
+		else if (c == 7 || c == 8) {
+			double d;
+			cin >> d;
+			if (c == 7) { Power(d).run(img); }
+			else if (c == 8) { Logarithm(d).run(img); }
+		}
+		else if (c == 9) { Absolute().run(img); }
+		else if (c == 12) { Invert().run(img); }
+		else if (c == 13) { BlackWhite().run(img); }
+		else if (c == 14) { Grayscale().run(img); }
+		else if (c == 15) { Median().run(img); }
+		else if (c == 16) {
+			int r, g, b, a;
+			cin >> r >> g >> b >> a;
+			Fill(r, g, b, a).run(img);
+		}
+	}
 	else {
 		unsigned i = 0;
 		for (auto& op: img.getOperations()) {
@@ -367,7 +398,7 @@ void addOperation(Image& img){
 		cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	}
 	
-	vector<BasicOperation*> operations;
+	vector<Operation*> operations;
 	for (unsigned i = 0; i < c; i++) {
 		cout << "Koja Operacija?" << endl;
 
@@ -386,21 +417,62 @@ void addOperation(Image& img){
 		cout << "13. Pretvori u sivo" << endl;
 		cout << "14. Pretvori u crno/belo" << endl;
 		cout << "15. Mediana" << endl;
+		cout << "16. Popuni" << endl;
+		cout << "17. Kompozitna" << endl;
 
 		unsigned c;
 
-		while (!(cin >> c) || c < 1 || c > 15) {
+		while (!(cin >> c) || c < 1 || c > 17) {
 			cerr << "Unesi opet" << endl; cin.clear();
 			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
 
-		operations.push_back(basicOperations[c - 1]);
+		if (c >= 1 && c <= 6 || c == 10 || c == 11) {
+			int con;
+			cin >> con;
+			if (c == 1) { operations.push_back(new Add(con)); }
+			else if (c == 2) { operations.push_back(new Subtract(con)); }
+			else if (c == 3) { operations.push_back(new ReverseSubtract(con)); }
+			else if (c == 4) { operations.push_back(new Multiply(con)); }
+			else if (c == 5) { operations.push_back(new Divide(con)); }
+			else if (c == 6) { operations.push_back(new ReverseDivide(con)); }
+			else if (c == 10) { operations.push_back(new Minimum(con)); }
+			else if (c == 11) { operations.push_back(new Maximum(con)); }
+		}
+		else if (c == 7 || c == 8) {
+			double con;
+			cin >> con;
+			if (c == 7) { operations.push_back(new Power(con)); }
+			else if (c == 8) { operations.push_back(new Logarithm(con)); }
+		}
+		else if (c == 9) { operations.push_back(new Absolute()); }
+		else if (c == 12) { operations.push_back(new Invert()); }
+		else if (c == 13) { operations.push_back(new BlackWhite()); }
+		else if (c == 14) { operations.push_back(new Grayscale()); }
+		else if (c == 15) { operations.push_back(new Median()); }
+		else if (c == 16) {
+			int r, g, b, a;
+			cin >> r >> g >> b >> a;
+			operations.push_back(new Fill(r,g,b,a));
+		}
+		else if (c == 17){
+			unsigned b = 0;
+			for (auto& op : img.getOperations()) {
+				cout << ++b << ". " << op.getName() << endl;
+			}
+			unsigned d;
+			if (b == 0) return;
+
+			while (!(cin >> d) || d < 1 || d > b) {
+				cerr << "Unesi opet" << endl; cin.clear();
+				cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			}
+
+			operations.push_back(new CompositeOperation(img.getOperations()[d - 1]));
+		}
 	}
 
-
-	CompositeOperation operation(name, operations);
-
-	img.addOperation(operation);
+	img.addOperation(CompositeOperation(name, operations));
 }
 
 void loadOperation(Image& img) {
@@ -424,28 +496,27 @@ void loadOperation(Image& img) {
 
 void savePicture(Image& img) {
 	try {
-		img.setSaved(1);
-		cout << "Koji format?" << endl;
-		cout << "1. BMP" << endl;
-		cout << "2. PAM" << endl;
-
-		int c;
-		while (!(cin >> c) || c < 1 || c > 2) {
-			cerr << "Unesi opet" << endl; cin.clear();
-			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-		}
-
 		string path;
 		cout << "Unesi put do slike" << endl;
 		cin >> path;
 
-		if (c == 1) {
+		size_t bmp, pam, json;
+
+		bmp = path.find(".bmp");
+		pam = path.find(".pam");
+		json = path.find(".json");
+
+		if (bmp != string::npos && (pam == string::npos || pam < bmp) && (json == string::npos || json < bmp)) {
 			BMPFormatter form(path);
 			form << img;
 		}
-		else {
+		else if (pam != string::npos && (json == string::npos || json < pam)) {
 			PAMFormatter form(path);
 			form << img;
+		}
+		else {
+			cerr << "Nevalidna ekstenzija" << endl;
+			return;
 		}
 	}
 	catch (InvalidFile& e) {
@@ -469,18 +540,16 @@ void saveProject(Image& img) {
 	}
 }
 
-void javaMode(Image& img) {
+void javaMode(Image& img, int argc, char* argv[]) {
 
-	string path;
-	cin >> path;
-
+	string path(argv[1]);
+	string op_path(argv[2]);
 
 	size_t bmp, pam, json;
 
 	bmp = path.find(".bmp");
 	pam = path.find(".pam");
 	json = path.find(".json");
-
 	try {
 		if (bmp != string::npos && (pam == string::npos || pam < bmp) && (json == string::npos || json < bmp)) {
 			BMPFormatter form(path);
@@ -507,8 +576,6 @@ void javaMode(Image& img) {
 	CompositeOperation operation;
 
 	try {
-		string op_path;
-		cin >> op_path;
 		operation.load(op_path);
 	}
 	catch (InvalidFile& e) {
@@ -543,11 +610,33 @@ void javaMode(Image& img) {
 	}
 }
 
+void saveOperation(Image& img) {
+	unsigned i = 0;
+	for (auto& op : img.getOperations()) {
+		cout << ++i << ". " << op.getName() << endl;
+	}
+	unsigned c;
+	if (i == 0) return;
+
+	while (!(cin >> c) || c < 1 || c > i) {
+		cerr << "Unesi opet" << endl; cin.clear();
+		cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	}
+
+
+	cout << "Unesite putanju" << endl;
+	string path;
+	cin >> path;
+	try {
+		img.getOperations()[c - 1].save(path);
+	}
+	catch(InvalidFile & e) {
+		cerr << e.what() << endl;
+	}
+}
+
 void perform(Image& img, int c) {
 	switch (c) {
-	case 0:
-		javaMode(img);
-		break;
 	case 1:
 		loadImage(img);
 		break;
@@ -585,9 +674,12 @@ void perform(Image& img, int c) {
 		loadOperation(img);
 		break;
 	case 13:
-		savePicture(img);
+		saveOperation(img);
 		break;
 	case 14:
+		savePicture(img);
+		break;
+	case 15:
 		saveProject(img);
 		break;
 	}
@@ -626,16 +718,20 @@ void endSave(Image& img) {
 	if (flag) return endSave(img);
 }
 
-int main() {
+int main(int argc, char* argv[]) {
 	Image img;
 
-	int c = 1;
+	if (argc <3) {
+		int c = 1;
+		while (c != 16) {
+			c = menu();
+			system("cls");
+			perform(img, c);
+		}
 
-	while (c != 15 && c != 0) {
-		c = menu();
-		system("cls");
-		perform(img, c);
+		if (c) endSave(img);
 	}
-
-	if (c) endSave(img);
+	else {
+		javaMode(img, argc, argv);
+	}
 }

@@ -1,47 +1,194 @@
-#pragma once
 #include "Operation.h"
 #include <string>
-#include "Image.h"
-
-#include<functional>
 
 using namespace std;
 
-class CompositeOperation;
-
-class BasicOperation :
-	public Operation
-{
-	function<void(Image & image)> f;
-protected:
-	void run_noround(Image& image) const;
+class Image;
+class Add : public Operation {
+	int c = 0;
 public:
-	BasicOperation(const string & name, function<void(Image &)> function);
-	void run(Image & image) const;
 
-	string getName() const;
-	string stringify() const;
+	Add();
+	Add(int _c);
 
-	friend CompositeOperation;
+	void run_noround(Image& img) const;
+	void parse(const string&);
+	string getC() const;
+	Operation* clone();
 };
 
-extern BasicOperation add;
-extern BasicOperation subtract;
-extern BasicOperation reverse_subtract;
-extern BasicOperation multiply;
-extern BasicOperation divide;
-extern BasicOperation reverse_divide;
+class Subtract : public Operation {
+	int c = 0;
+public:
 
-extern BasicOperation power;
-extern BasicOperation logarithm;
-extern BasicOperation absolute;
-extern BasicOperation minimum;
-extern BasicOperation maximum;
+	Subtract();
+	Subtract(int _c);
+
+	void run_noround(Image& img) const;
+	void parse(const string&);
+	string getC() const;
+	Operation* clone();
+};
+
+class ReverseSubtract : public Operation {
+	int c = 0;
+public:
+
+	ReverseSubtract();
+	ReverseSubtract(int _c);
+
+	void run_noround(Image& img) const;
+	void parse(const string&);
+	string getC() const;
+	Operation* clone();
+};
+
+class Multiply : public Operation {
+	int c = 0;
+public:
+
+	Multiply();
+	Multiply(int _c);
+
+	void run_noround(Image& img) const;
+	void parse(const string&);
+	string getC() const;
+	Operation* clone();
+};
+
+class Divide : public Operation {
+	int c = 0;
+public:
+
+	Divide();
+	Divide(int _c);
+
+	void run_noround(Image& img) const;
+	void parse(const string&);
+	string getC() const;
+	Operation* clone();
+};
+
+class ReverseDivide : public Operation {
+	int c = 0;
+public:
+
+	ReverseDivide();
+	ReverseDivide(int _c);
+
+	void run_noround(Image& img) const;
+	void parse(const string&);
+	string getC() const;
+	Operation* clone();
+};
+
+class Power : public Operation {
+	double c = 0;
+public:
+
+	Power();
+	Power(int _c);
+
+	void run_noround(Image& img) const;
+	void parse(const string&);
+	string getC() const;
+	Operation* clone();
+};
+
+class Logarithm : public Operation {
+	double c = 0;
+public:
+
+	Logarithm();
+	Logarithm(int _c);
+
+	void run_noround(Image& img) const;
+	void parse(const string&);
+	string getC() const;
+	Operation* clone();
+};
+
+class Absolute : public Operation {
+public:
+
+	Absolute();
+
+	void run_noround(Image& img) const;
+	Operation* clone();
+};
+
+class Minimum : public Operation {
+	int c = 0;
+public:
+
+	Minimum();
+	Minimum(int _c);
+
+	void run_noround(Image& img) const;
+	void parse(const string&);
+	string getC() const;
+	Operation* clone();
+};
+
+class Maximum : public Operation {
+	int c = 0;
+public:
+
+	Maximum();
+	Maximum(int _c);
+
+	void run_noround(Image& img) const;
+	void parse(const string&);
+	string getC() const;
+	Operation* clone();
+};
+
+class Invert : public Operation {
+public:
+
+	Invert();
+
+	void run_noround(Image& img) const;
+	Operation* clone();
+};
+
+class BlackWhite : public Operation {
+public:
+
+	BlackWhite();
+
+	void run_noround(Image& img) const;
+	Operation* clone();
+};
+
+class Grayscale : public Operation {
+public:
+
+	Grayscale();
+
+	void run_noround(Image& img) const;
+	Operation* clone();
+};
+
+class Median : public Operation {
+public:
+
+	Median();
+
+	void run_noround(Image& img) const;
+	Operation* clone();
+};
+
+class Fill : public Operation {
+	Pixel c;
+public:
 
 
-extern BasicOperation invert;
-extern BasicOperation grayscale;
-extern BasicOperation blackwhite;
-extern BasicOperation median;
+	Fill();
+	Fill(int r, int g, int b, int a);
 
-extern vector<BasicOperation *> basicOperations;
+	void run_noround(Image& img) const;
+	void parse(const string&);
+	string getC() const;
+	Operation * clone();
+};
