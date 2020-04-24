@@ -24,7 +24,7 @@ uint32_t cptoul(char arr[]) {
 	uint32_t res = 0;
 	int r = 0;
 	for (int i = 0; i < 4 ; i++) {
-		res += (int)arr[i] << r;
+		res += (uint8_t)arr[i] << r;
 		r += 8;
 	}
 
@@ -126,28 +126,34 @@ const Formatter& BMPFormatter::operator>>(Layer& layer) const {
 
 	if (!file.is_open()) throw InvalidFile();
 
-	char header[26];
+	char width_f[4];
+	char height_f[4];
 
-	file.get(header, 26);
+	file.seekg(file.beg + 0x12);
+	file.read(width_f, 4);
+	file.read(height_f, 4);
 
-	uint32_t w = cptoul(header + 0x12);
-	uint32_t h = cptoul(header + 0x16);
+	uint32_t w = cptoul(width_f);
+	uint32_t h = cptoul(height_f);
 
-	file.seekg(file.beg + 122);
+	file.seekg(file.beg + 0xA);
+
+	char offset_f[4];
+	file.read(offset_f, 4);
+	uint32_t offset = cptoul(offset_f);
+
+	file.seekg(file.beg + offset);
 
 	layer = Layer(w, h);
 
-	unsigned int row_width = 4 * w + 1;
-
-	char* row = new char[row_width];
+	char pixel_f[4];
 
 	for (int i = h - 1; i >= 0; --i) {
-		file.get(row, row_width);
-		for (int j = w - 1; j >= 0; --j) {
-			layer[i][j] = Pixel((uint8_t)row[4 * j + 2], (uint8_t)row[4 * j + 1], (uint8_t)row[4 * j], round(100.0 / 255 * (uint8_t)row[4 * j + 3]));
+		for (int j = 0; j < w; ++j) {
+			file.read(pixel_f, 4);
+			layer[i][j] = Pixel((uint8_t)pixel_f[2], (uint8_t)pixel_f[1], (uint8_t)pixel_f[0], round(100.0 / 255 * (uint8_t)pixel_f[3]));
 		}
 	}
-	delete[] row;
 
 	file.close();
 
