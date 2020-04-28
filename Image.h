@@ -63,6 +63,9 @@ public:
 	bool getSaved();
 
 	const vector<CompositeOperation>& getOperations() const;
+	const vector<Selection>& getSelections() const;
+	const int layerCount() const;
+	
 
 	iterator begin();
 	iterator end();

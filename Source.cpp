@@ -7,6 +7,12 @@
 #include "BasicOperation.h"
 #include "CompositeOperation.h"
 #include "InvalidFile.h"
+#include <SDL.h>
+#include <thread>
+#include <math.h>
+
+#define WIDTH 1080
+#define HEIGHT 720
 
 using namespace std;
 
@@ -14,41 +20,42 @@ int menu() {
 
 	int c = 0;
 	//UCITAVANJE SLIKE
-	cout << "1. Ucitaj sliku" << endl;
-	cout << "2. Ucitaj Projekat" << endl;
+	cout << "1. Load image" << endl;
+	cout << "2. Load project" << endl;
 	//RAD SA SLOJEVIMA
-	cout << "3. Dodaj sloj" << endl;
-	cout << "4. Aktiviraj/Deaktiviraj sloj" << endl;
-	cout << "5. Ucini sloj vidljivim/nevidljivim" << endl;
-	cout << "6. Obrisi sloj" << endl;
+	cout << "3. Add layer" << endl;
+	cout << "4. Activate/Deactivate layer" << endl;
+	cout << "5. Make layer (in)visible" << endl;
+	cout << "6. Delete layer" << endl;
 	//DEFINISANJE SELEKCIJA
-	cout << "7. Dodaj Selekciju" << endl;
-	cout << "8. Izaberi Selekciju" << endl;
-	cout << "9. Obrisi Selekciju" << endl;
+	cout << "7. Add Selection" << endl;
+	cout << "8. Choose Selection" << endl;
+	cout << "9. Delete Selection" << endl;
 	//OPERACIJE NAD SLIKOM
-	cout << "10. Izvrsi Operaciju" << endl;
-	cout << "11. Dodaj Operaciju" << endl;
-	cout << "12. Ucitaj Operaciju" << endl;
-	cout << "13. Sacuvaj Operaciju" << endl;
+	cout << "10. Perform Operation" << endl;
+	cout << "11. Add Operation" << endl;
+	cout << "12. Load Operation" << endl;
+	cout << "13. Save Operation" << endl;
 	//EKSPORTOVANJE SLIKE
-	cout << "14. Sacuvaj Sliku" << endl;
+	cout << "14. Save image" << endl;
 	//SNIMANJE PROJEKTA
-	cout << "15. Snimi Projekat" << endl;
+	cout << "15. Save project" << endl;
 	//KRAJ RADA
-	cout << "16. Kraj rada" << endl;
+	cout << "16. Exit" << endl;
 
 	while (!(cin >> c)) {
-		cerr << "Unesi opet" << endl;cin.clear();
+		cerr << "Try Again" << endl;cin.clear();
 		cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	}
 
+	
 	return c;
 }
 
 void loadImage(Image& img) {
 	try {
 		string path;
-		cout << "Unesi put do slike" << endl;
+		cout << "Enter path" << endl;
 		cin >> path;
 
 		size_t bmp, pam, json;
@@ -66,7 +73,7 @@ void loadImage(Image& img) {
 			form >> img;
 		}
 		else {
-			cerr << "Nevalidna ekstenzija" << endl;
+			cerr << "Non-valid extension" << endl;
 			return;
 		}
 	}
@@ -80,7 +87,7 @@ void loadProject(Image& img) {
 	try {
 
 	string path;
-	cout << "Unesi put do slike" << endl;
+	cout << "Enter path" << endl;
 	cin >> path;
 
 	MyFormatter form(path);
@@ -98,21 +105,21 @@ void addLayer(Image& img) {
 	bool flag = 1;
 	try {
 		img.setSaved(0);
-		cout << "1. Iz fajla" << endl;
-		cout << "2. Sa sirinom i visinom" << endl;
-		cout << "3. Bez specifikacija" << endl;
+		cout << "1. From file" << endl;
+		cout << "2. Width and Height" << endl;
+		cout << "3. No specifications" << endl;
 
 		int c;
 
 		while (!(cin >> c) || c < 1 || c > 3) {
-			cerr << "Unesi opet" << endl; cin.clear();
+			cerr << "Try Again" << endl; cin.clear();
 			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
 
 
 		if (c == 1) {
 			string path;
-			cout << "Unesi put do slike" << endl;
+			cout << "Enter path" << endl;
 			cin >> path;
 
 			size_t bmp, pam, json;
@@ -130,7 +137,7 @@ void addLayer(Image& img) {
 				form >> layer;
 			}
 			else {
-				cerr << "Nevalidna ekstenzija" << endl;
+				cerr << "Non-valid extension" << endl;
 				return;
 			}
 		}
@@ -138,14 +145,14 @@ void addLayer(Image& img) {
 			unsigned int width = 0;
 			unsigned int height = 0;
 
-			cout << "Unesi visinu" << endl;
+			cout << "Enter height" << endl;
 			while (!(cin >> height)) {
-				cerr << "Unesi opet" << endl; cin.clear();
+				cerr << "Try Again" << endl; cin.clear();
 				cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 			}
-			cout << "Unesi sirinu" << endl;
+			cout << "Enter width" << endl;
 			while (!(cin >> width)) {
-				cerr << "Unesi opet" << endl; cin.clear();
+				cerr << "Try Again" << endl; cin.clear();
 				cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 			}
 
@@ -162,20 +169,26 @@ void addLayer(Image& img) {
 
 void activateLayer(Image& img) {
 	try {
-		cout << "Unesi indeks" << endl;
+
+		if (img.layerCount() == 0) {
+			cout << "No Layers" << endl;
+			return;
+		}
+
+		cout << "Enter index [0-" << img.layerCount()-1 << "]" <<  endl;
 		unsigned c;
 
 		while (!(cin >> c)) {
-			cerr << "Unesi opet" << endl; cin.clear();
+			cerr << "Try Again" << endl; cin.clear();
 			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
 
-		cout << "1. Deaktiviraj" << endl;
-		cout << "2. Aktiviraj" << endl;
+		cout << "1. Deactivate" << endl;
+		cout << "2. Activate" << endl;
 
 		int d;
 		while (!(cin >> d || d < 1 || d > 2)) {
-			cerr << "Unesi opet" << endl; cin.clear();
+			cerr << "Try Again" << endl; cin.clear();
 			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
 
@@ -193,20 +206,26 @@ void activateLayer(Image& img) {
 
 void setLayerVisible(Image& img) {
 	try {
-		cout << "Unesi indeks" << endl;
+
+		if (img.layerCount() == 0) {
+			cout << "No Layers" << endl;
+			return;
+		}
+
+		cout << "Enter index [0-" << img.layerCount() - 1 << "]" << endl;
 		unsigned c;
 
 		while (!(cin >> c)) {
-			cerr << "Unesi opet" << endl; cin.clear();
+			cerr << "Try Again" << endl; cin.clear();
 			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
 
-		cout << "1. Deaktiviraj" << endl;
-		cout << "2. Aktiviraj" << endl;
+		cout << "1. Invisible" << endl;
+		cout << "2. Visible" << endl;
 
 		int d;
 		while (!(cin >> d || d < 1 || d > 2)) {
-			cerr << "Unesi opet" << endl; cin.clear();
+			cerr << "Try Again" << endl; cin.clear();
 			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
 
@@ -225,11 +244,15 @@ void setLayerVisible(Image& img) {
 void deleteLayer(Image& img) {
 	try {
 		img.setSaved(0);
-		cout << "Unesi indeks" << endl;
-		unsigned c;
+		if (img.layerCount() == 0) {
+			cout << "No Layers" << endl;
+			return;
+		}
 
+		cout << "Enter index [0-" << img.layerCount() - 1 << "]" << endl;
+		unsigned c;
 		while (!(cin >> c)) {
-			cerr << "Unesi opet" << endl; cin.clear();
+			cerr << "Try Again" << endl; cin.clear();
 			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
 
@@ -244,38 +267,38 @@ void addSelection(Image& img) {
 	img.setSaved(0);
 	string name;
 
-	cout << "Unsesi ime" << endl;
+	cout << "Enter name" << endl;
 	cin >> name;
 
-	cout << "Unesi broj pravougaonika" << endl;
+	cout << "Enter number of rectangles" << endl;
 	unsigned c;
 
 	while (!(cin >> c)) {
-		cerr << "Unesi opet" << endl;cin.clear();
+		cerr << "Try Again" << endl;cin.clear();
 		cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	}
 	vector<Rectangle> rectangles;
 
 	for (unsigned i = 0; i < c; i++) {
 		unsigned int w, h, x, y;
-		cout << "Unesi sirinu" << endl;
+		cout << "Enter width" << endl;
 		while (!(cin >> w)) {
-			cerr << "Unesi opet" << endl;cin.clear();
+			cerr << "Try Again" << endl;cin.clear();
 			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
-		cout << "Unesi visinu" << endl;
+		cout << "Enter height" << endl;
 		while (!(cin >> h)) {
-			cerr << "Unesi opet" << endl;cin.clear();
+			cerr << "Try Again" << endl;cin.clear();
 			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
-		cout << "Unesi x gornjeg levog coska" << endl;
+		cout << "Enter x of upper left corner" << endl;
 		while (!(cin >> x)) {
-			cerr << "Unesi opet" << endl;cin.clear();
+			cerr << "Try Again" << endl;cin.clear();
 			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
-		cout << "Unesi y gornjeg levog coska" << endl;
+		cout << "Enter y of upper left corner" << endl;
 		while (!(cin >> y)) {
-			cerr << "Unesi opet" << endl;cin.clear();
+			cerr << "Try Again" << endl;cin.clear();
 			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
 
@@ -290,50 +313,60 @@ void addSelection(Image& img) {
 
 void chooseSelection(Image& img) {
 	string name;
-	cout << "Unesi ime" << endl;
+
+	for (auto& i : img.getSelections()) {
+		cout << i.getName() << endl;
+	}
+
+	cout << "Enter name" << endl;
 	cin >> name;
 	if (!img.select(name)) {
-		cout << "Ne postoji trazena selekcija" << endl;
+		cout << "This Selection doesn't exist" << endl;
 	}
 }
 
 void deleteSelection(Image& img) {
 	img.setSaved(0);
+
+	for (auto& i : img.getSelections()) {
+		cout << i.getName() << endl;
+	}
+
 	string name;
-	cout << "Unesi ime" << endl;
+	cout << "Enter name" << endl;
 	cin >> name;
 	if (!img.deleteSelection(name)) {
-		cout << "Ne postoji trazena selekcija" << endl;
+		cout << "This Selection doesn't exist" << endl;
 	}
 }
 
 void doOperation(Image& img) {
 	img.setSaved(0);
 
-	cout << "Koja Operacija?" << endl;
+	cout << "Which operation?" << endl;
 
-	cout << "1. Dodaj" << endl;
-	cout << "2. Oduzmi" << endl;
-	cout << "3. Obrnuto oduzmi" << endl;
-	cout << "4. Pomnozi" << endl;
-	cout << "5. Podeli" << endl;
-	cout << "6. Obrnuto podeli" << endl;
-	cout << "7. Podigni na stepen" << endl;
-	cout << "8. Logaritam" << endl;
-	cout << "9. Absolutna vrednost" << endl;
+	cout << "1. Add" << endl;
+	cout << "2. Subtract" << endl;
+	cout << "3. Reverse subtract" << endl;
+	cout << "4. Multiply" << endl;
+	cout << "5. Divide" << endl;
+	cout << "6. Reverse divide" << endl;
+	cout << "7. Power" << endl;
+	cout << "8. Logarithm" << endl;
+	cout << "9. Absolute Value" << endl;
 	cout << "10. Minimum" << endl;
-	cout << "11. Maksimum" << endl;
-	cout << "12. Invertuj" << endl;
-	cout << "13. Pretvori u sivo" << endl;
-	cout << "14. Pretvori u crno/belo" << endl;
-	cout << "15. Mediana" << endl;
-	cout << "16. Popuni" << endl;
-	cout << "17. Kompozitna" << endl;
+	cout << "11. Maximum" << endl;
+	cout << "12. Invert" << endl;
+	cout << "13. Grayscale" << endl;
+	cout << "14. Black & White" << endl;
+	cout << "15. Median" << endl;
+	cout << "16. Fill" << endl;
+	cout << "17. Composite" << endl;
 
 	unsigned c;
 
 	while (!(cin >> c) || c < 1 || c > 17) {
-		cerr << "Unesi opet" << endl; cin.clear();
+		cerr << "Try Again" << endl; cin.clear();
 		cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	}
 
@@ -358,8 +391,8 @@ void doOperation(Image& img) {
 		}
 		else if (c == 9) { Absolute().run(img); }
 		else if (c == 12) { Invert().run(img); }
-		else if (c == 13) { BlackWhite().run(img); }
-		else if (c == 14) { Grayscale().run(img); }
+		else if (c == 13) { Grayscale().run(img); }
+		else if (c == 14) { BlackWhite().run(img); }
 		else if (c == 15) { Median().run(img); }
 		else if (c == 16) {
 			int r, g, b, a;
@@ -375,7 +408,7 @@ void doOperation(Image& img) {
 		unsigned c;
 
 		while (!(cin >> c) || c < 1 || c > i) {
-			cerr << "Unesi opet" << endl; cin.clear();
+			cerr << "Try Again" << endl; cin.clear();
 			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
 
@@ -387,43 +420,43 @@ void addOperation(Image& img){
 	img.setSaved(0);
 
 	string name;
-	cout << "Unesi ime" << endl;
+	cout << "Enter name" << endl;
 	cin >> name;
 
-	cout << "Koliko funkcija" << endl;
+	cout << "How many functions?" << endl;
 	unsigned c;
 
 	while (!(cin >> c)) {
-		cerr << "Unesi opet" << endl; cin.clear();
+		cerr << "Try Again" << endl; cin.clear();
 		cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	}
 	
 	vector<Operation*> operations;
 	for (unsigned i = 0; i < c; i++) {
-		cout << "Koja Operacija?" << endl;
+		cout << "Which operation?" << endl;
 
-		cout << "1. Dodaj" << endl;
-		cout << "2. Oduzmi" << endl;
-		cout << "3. Obrnuto oduzmi" << endl;
-		cout << "4. Pomnozi" << endl;
-		cout << "5. Podeli" << endl;
-		cout << "6. Obrnuto podeli" << endl;
-		cout << "7. Podigni na stepen" << endl;
-		cout << "8. Logaritam" << endl;
-		cout << "9. Absolutna vrednost" << endl;
+		cout << "1. Add" << endl;
+		cout << "2. Subtract" << endl;
+		cout << "3. Reverse subtract" << endl;
+		cout << "4. Multiply" << endl;
+		cout << "5. Divide" << endl;
+		cout << "6. Reverse divide" << endl;
+		cout << "7. Power" << endl;
+		cout << "8. Logarithm" << endl;
+		cout << "9. Absolute Value" << endl;
 		cout << "10. Minimum" << endl;
-		cout << "11. Maksimum" << endl;
-		cout << "12. Invertuj" << endl;
-		cout << "13. Pretvori u sivo" << endl;
-		cout << "14. Pretvori u crno/belo" << endl;
-		cout << "15. Mediana" << endl;
-		cout << "16. Popuni" << endl;
-		cout << "17. Kompozitna" << endl;
+		cout << "11. Maximum" << endl;
+		cout << "12. Invert" << endl;
+		cout << "13. Grayscale" << endl;
+		cout << "14. Black & White" << endl;
+		cout << "15. Median" << endl;
+		cout << "16. Fill" << endl;
+		cout << "17. Composite" << endl;
 
 		unsigned c;
 
 		while (!(cin >> c) || c < 1 || c > 17) {
-			cerr << "Unesi opet" << endl; cin.clear();
+			cerr << "Try Again" << endl; cin.clear();
 			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
 
@@ -464,7 +497,7 @@ void addOperation(Image& img){
 			if (b == 0) return;
 
 			while (!(cin >> d) || d < 1 || d > b) {
-				cerr << "Unesi opet" << endl; cin.clear();
+				cerr << "Try Again" << endl; cin.clear();
 				cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 			}
 
@@ -482,7 +515,7 @@ void loadOperation(Image& img) {
 	CompositeOperation operation;
 	try {
 		string path;
-		cout << "Unesi putanju" << endl;
+		cout << "Enter path" << endl;
 		cin >> path;
 
 		operation.load(path);
@@ -497,7 +530,7 @@ void loadOperation(Image& img) {
 void savePicture(Image& img) {
 	try {
 		string path;
-		cout << "Unesi put do slike" << endl;
+		cout << "Enter path" << endl;
 		cin >> path;
 
 		size_t bmp, pam, json;
@@ -515,7 +548,7 @@ void savePicture(Image& img) {
 			form << img;
 		}
 		else {
-			cerr << "Nevalidna ekstenzija" << endl;
+			cerr << "Non-valid extension" << endl;
 			return;
 		}
 	}
@@ -528,7 +561,7 @@ void saveProject(Image& img) {
 	try {
 		img.setSaved(1);
 		string path;
-		cout << "Unesi put do slike" << endl;
+		cout << "Enter path" << endl;
 		cin >> path;
 
 		MyFormatter form(path);
@@ -564,7 +597,7 @@ void javaMode(Image& img, int argc, char* argv[]) {
 			form >> img;
 		}
 		else {
-			cerr << "Nevalidna ekstenzija" << endl;
+			cerr << "Non-valid extension" << endl;
 			return;
 		}
 	}
@@ -600,7 +633,7 @@ void javaMode(Image& img, int argc, char* argv[]) {
 			form << img;
 		}
 		else {
-			cerr << "Nevalidna ekstenzija" << endl;
+			cerr << "Non-valid extension" << endl;
 			return;
 		}
 	}
@@ -619,12 +652,12 @@ void saveOperation(Image& img) {
 	if (i == 0) return;
 
 	while (!(cin >> c) || c < 1 || c > i) {
-		cerr << "Unesi opet" << endl; cin.clear();
+		cerr << "Try Again" << endl; cin.clear();
 		cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	}
 
 
-	cout << "Unesite putanju" << endl;
+	cout << "Enter path" << endl;
 	string path;
 	cin >> path;
 	try {
@@ -688,15 +721,15 @@ void perform(Image& img, int c) {
 void endSave(Image& img) {
 	if (img.getSaved()) return;
 
-	cout << "Da li zelite da sacuvate projekat?" << endl;
+	cout << "Do you want to save?" << endl;
 
-	cout << "1. Da" << endl;
-	cout << "2. Ne" << endl;
+	cout << "1. Yes" << endl;
+	cout << "2. No" << endl;
 
 	unsigned c;
 
 	while (!(cin >> c) || c < 1 || c > 2) {
-		cerr << "Unesi opet" << endl; cin.clear();
+		cerr << "Try Again" << endl; cin.clear();
 		cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	}
 
@@ -704,7 +737,7 @@ void endSave(Image& img) {
 
 	bool flag = 0;
 	try {
-		cout << "Unesite putanju" << endl;
+		cout << "Enter path" << endl;
 		string path;
 		cin >> path;
 		MyFormatter form(path);
@@ -718,20 +751,130 @@ void endSave(Image& img) {
 	if (flag) return endSave(img);
 }
 
+void editImage(Image* img, volatile bool* running, volatile bool* update, volatile bool* finished) {
+
+	int c = 1;
+	while (c != 16 && running) {
+		c = menu();
+		system("cls");
+		perform(*img, c);
+
+		*update = true;
+	}
+
+	endSave(*img);
+	*finished = true;
+
+	*running = false;
+}
+
+int updateWindow(Image& img, SDL_Window* window, SDL_Renderer* renderer) {
+
+	SDL_RenderClear(renderer);
+
+	unsigned char * pixels;
+
+	pixels = new unsigned char[4 * img.getHeight() * img.getWidth()];
+
+	for (int i = 0; i < img.getHeight(); ++i) {
+		for (int j = 0; j < img.getWidth(); ++j) {
+			pixels[(i * img.getWidth() + j) * 4    ] = img.get(i, j).getR();
+			pixels[(i * img.getWidth() + j) * 4 + 1] = img.get(i, j).getG();
+			pixels[(i * img.getWidth() + j) * 4 + 2] = img.get(i, j).getB();
+			pixels[(i * img.getWidth() + j) * 4 + 3] = img.get(i, j).getA() * 255 / 100;
+		}
+	}
+
+	SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormatFrom((void *) pixels, img.getWidth(), img.getHeight(), 32, 4 * img.getWidth(), SDL_PIXELFORMAT_RGBA32);
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+
+	SDL_RenderCopy(renderer, texture, NULL, NULL);
+
+	SDL_FreeSurface(surface);
+	delete[] pixels;
+	if (!surface) return EXIT_FAILURE;
+
+
+	SDL_RenderPresent(renderer);
+}
+
 int main(int argc, char* argv[]) {
 	Image img;
 
-	if (argc <3) {
-		int c = 1;
-		while (c != 16) {
-			c = menu();
-			system("cls");
-			perform(img, c);
-		}
-
-		if (c) endSave(img);
-	}
-	else {
+	if (argc == 3) {
 		javaMode(img, argc, argv);
+		return EXIT_SUCCESS;
 	}
+	
+	if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+		printf(SDL_GetError());
+		return EXIT_FAILURE;
+	}
+
+	SDL_Window* window = SDL_CreateWindow("Image Editor",
+		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_ALLOW_HIGHDPI);
+
+	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, 0);
+
+	if (window == NULL) {
+		printf(SDL_GetError());
+		return EXIT_FAILURE;
+	}
+
+
+	volatile bool running = true;
+	volatile bool update = false;
+	volatile bool finished = false;
+
+	thread t (editImage ,&img ,&running, &update, &finished);
+
+	t.detach();
+
+	SDL_Event windowEvent;
+
+	int sx = 0, sy = 0;
+	int dx = 0, dy = 0;
+	int selId = 0;
+
+	while (running) {
+
+		while (SDL_PollEvent(&windowEvent))
+			if (SDL_QUIT == windowEvent.type) {
+				running = 0;
+			}
+			else if (SDL_MOUSEBUTTONDOWN == windowEvent.type) {
+				sx = windowEvent.button.x * img.getWidth() / WIDTH;
+				sy = windowEvent.button.y * img.getHeight() / HEIGHT;
+			}
+			else if (SDL_MOUSEBUTTONUP == windowEvent.type) {
+				dx = windowEvent.button.x * img.getWidth() / WIDTH;
+				dy = windowEvent.button.y * img.getHeight() / HEIGHT;
+
+				Rectangle rect(abs(sx - dx), abs(sy - dy), fmin(sx, dx), fmax(sy, dy));
+				vector<Rectangle> rects;
+				rects.push_back(rect);
+				Selection sel(to_string(selId++), rects);
+				img.addSelect(sel);
+			}
+
+		
+		if (update) {
+			if (updateWindow(img, window, renderer)) {
+				running = false;
+			}
+			update = false;
+		}
+		
+		SDL_Delay(1000 / 60);
+	}
+
+	SDL_DestroyWindow(window);
+	SDL_DestroyRenderer(renderer);
+	SDL_Quit();
+
+	running = false;
+	while (!finished);
+
+	return EXIT_SUCCESS;
 }

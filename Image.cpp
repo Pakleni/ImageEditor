@@ -286,6 +286,10 @@ bool Image::getSaved() { return saved;  }
 
 const vector<CompositeOperation>& Image::getOperations() const { return operations; }
 
+const vector<Selection>& Image::getSelections() const { return selections; }
+
+const int Image::layerCount() const { return layers.size(); };
+
 bool Image::deleteSelection(const string& selectionName) {
 	for (auto i = selections.begin(); i != selections.end(); ++i) {
 		if (i->getName() == selectionName) {
