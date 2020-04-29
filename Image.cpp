@@ -73,7 +73,7 @@ bool Image::iterator::selected() {
 		return false;
 	if (!img->activeSelection)
 		return true;
-	for (Rectangle r : img->activeSelection->rectangles) {
+	for (auto& r : img->activeSelection->getRectangles()) {
 		if (w >= r.getX() && w < r.getX() + r.getWidth() && h <= r.getY() && (r.getY() < r.getHeight() || h > r.getY() - r.getHeight()))
 			return true;
 	}
@@ -287,6 +287,8 @@ bool Image::getSaved() { return saved;  }
 const vector<CompositeOperation>& Image::getOperations() const { return operations; }
 
 const vector<Selection>& Image::getSelections() const { return selections; }
+
+const Selection* Image::getActiveSelection() const { return activeSelection; }
 
 const int Image::layerCount() const { return layers.size(); };
 

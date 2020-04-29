@@ -129,30 +129,57 @@ const Formatter& BMPFormatter::operator>>(Layer& layer) const {
 	char width_f[4];
 	char height_f[4];
 
-	file.seekg(file.beg + 0x12);
+	file.seekg(0x12);
 	file.read(width_f, 4);
 	file.read(height_f, 4);
 
 	uint32_t w = cptoul(width_f);
 	uint32_t h = cptoul(height_f);
 
-	file.seekg(file.beg + 0xA);
+	file.seekg(0xA);
 
 	char offset_f[4];
 	file.read(offset_f, 4);
 	uint32_t offset = cptoul(offset_f);
 
-	file.seekg(file.beg + offset);
+	file.seekg(0x1C);
+	char bits_f[4] = {};
+	file.read(bits_f, 2);
 
 	layer = Layer(w, h);
+    
+	file.seekg(offset);
+	if (cptoul(bits_f) == 32) {
+		char pixel_f[4];
 
-	char pixel_f[4];
-
-	for (int i = h - 1; i >= 0; --i) {
-		for (int j = 0; j < w; ++j) {
-			file.read(pixel_f, 4);
-			layer[i][j] = Pixel((uint8_t)pixel_f[2], (uint8_t)pixel_f[1], (uint8_t)pixel_f[0], round(100.0 / 255 * (uint8_t)pixel_f[3]));
+		for (int i = h - 1; i >= 0; --i) {
+			for (int j = 0; j < w; ++j) {
+				file.read(pixel_f, 4);
+				layer[i][j] = Pixel((uint8_t)pixel_f[2],
+									(uint8_t)pixel_f[1],
+									(uint8_t)pixel_f[0],
+									round(100.0 / 255 * (uint8_t)pixel_f[3]));
+			}
 		}
+	}
+	else if (cptoul(bits_f) == 24) {
+		char pixel_f[3];
+
+		int fill = ((w * 3 + 3)/ 4) * 4 - w * 3;
+
+		for (int i = h - 1; i > 0; --i) {
+			for (int j = 0; j < w; ++j) {
+				file.read(pixel_f, 3);
+				layer[i][j] = Pixel((uint8_t)pixel_f[2],
+									(uint8_t)pixel_f[1],
+									(uint8_t)pixel_f[0],
+									100);
+			}
+			file.seekg(fill, file.cur);
+		}
+	}
+	else {
+		throw InvalidFile();
 	}
 
 	file.close();

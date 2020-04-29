@@ -64,6 +64,7 @@ public:
 
 	const vector<CompositeOperation>& getOperations() const;
 	const vector<Selection>& getSelections() const;
+	const Selection* getActiveSelection() const;
 	const int layerCount() const;
 	
 

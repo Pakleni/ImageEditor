@@ -10,6 +10,7 @@
 #include <SDL.h>
 #include <thread>
 #include <math.h>
+#include <boost/algorithm/string.hpp>
 
 #define WIDTH 1080
 #define HEIGHT 720
@@ -60,15 +61,14 @@ void loadImage(Image& img) {
 
 		size_t bmp, pam, json;
 
-		bmp = path.find(".bmp");
-		pam = path.find(".pam");
-		json = path.find(".json");
+		bmp = boost::algorithm::to_lower_copy(path).find(".bmp");
+		pam = boost::algorithm::to_lower_copy(path).find(".pam");
 
-		if (bmp != string::npos && (pam == string::npos || pam < bmp) && (json == string::npos || json < bmp)) {
+		if (bmp != string::npos && (pam == string::npos || pam < bmp)) {
 			BMPFormatter form(path);
 			form >> img;
 		}
-		else if (pam != string::npos && (json == string::npos || json < pam)) {
+		else if (pam != string::npos) {
 			PAMFormatter form(path);
 			form >> img;
 		}
@@ -86,13 +86,13 @@ void loadImage(Image& img) {
 void loadProject(Image& img) {
 	try {
 
-	string path;
-	cout << "Enter path" << endl;
-	cin >> path;
+		string path;
+		cout << "Enter path" << endl;
+		cin >> path;
 
-	MyFormatter form(path);
+		MyFormatter form(path);
 
-	form >> img;
+		form >> img;
 	}
 	catch (InvalidFile& e) {
 		cerr << e.what() << endl;
@@ -107,11 +107,11 @@ void addLayer(Image& img) {
 		img.setSaved(0);
 		cout << "1. From file" << endl;
 		cout << "2. Width and Height" << endl;
-		cout << "3. No specifications" << endl;
+		if (img.layerCount()) cout << "3. No specifications" << endl;
 
 		int c;
 
-		while (!(cin >> c) || c < 1 || c > 3) {
+		while (!(cin >> c) || c < 1 || c >(img.layerCount() ? 3 : 2)) {
 			cerr << "Try Again" << endl; cin.clear();
 			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
@@ -124,15 +124,14 @@ void addLayer(Image& img) {
 
 			size_t bmp, pam, json;
 
-			bmp = path.find(".bmp");
-			pam = path.find(".pam");
-			json = path.find(".json");
+			bmp = boost::algorithm::to_lower_copy(path).find(".bmp");
+			pam = boost::algorithm::to_lower_copy(path).find(".pam");
 
-			if (bmp != string::npos && (pam == string::npos || pam < bmp) && (json == string::npos || json < bmp)) {
+			if (bmp != string::npos && (pam == string::npos || pam < bmp)) {
 				BMPFormatter form(path);
 				form >> layer;
 			}
-			else if (pam != string::npos && (json == string::npos || json < pam)) {
+			else if (pam != string::npos) {
 				PAMFormatter form(path);
 				form >> layer;
 			}
@@ -164,7 +163,7 @@ void addLayer(Image& img) {
 		cerr << e.what() << endl;
 		flag = 0;
 	}
-	if (flag) img.addLayer(layer); 
+	if (flag) img.addLayer(layer);
 }
 
 void activateLayer(Image& img) {
@@ -175,7 +174,7 @@ void activateLayer(Image& img) {
 			return;
 		}
 
-		cout << "Enter index [0-" << img.layerCount()-1 << "]" <<  endl;
+		cout << "Enter index [0-" << img.layerCount() - 1 << "]" << endl;
 		unsigned c;
 
 		while (!(cin >> c)) {
@@ -274,7 +273,7 @@ void addSelection(Image& img) {
 	unsigned c;
 
 	while (!(cin >> c)) {
-		cerr << "Try Again" << endl;cin.clear();
+		cerr << "Try Again" << endl; cin.clear();
 		cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	}
 	vector<Rectangle> rectangles;
@@ -283,22 +282,22 @@ void addSelection(Image& img) {
 		unsigned int w, h, x, y;
 		cout << "Enter width" << endl;
 		while (!(cin >> w)) {
-			cerr << "Try Again" << endl;cin.clear();
+			cerr << "Try Again" << endl; cin.clear();
 			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
 		cout << "Enter height" << endl;
 		while (!(cin >> h)) {
-			cerr << "Try Again" << endl;cin.clear();
+			cerr << "Try Again" << endl; cin.clear();
 			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
 		cout << "Enter x of upper left corner" << endl;
 		while (!(cin >> x)) {
-			cerr << "Try Again" << endl;cin.clear();
+			cerr << "Try Again" << endl; cin.clear();
 			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
 		cout << "Enter y of upper left corner" << endl;
 		while (!(cin >> y)) {
-			cerr << "Try Again" << endl;cin.clear();
+			cerr << "Try Again" << endl; cin.clear();
 			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
 
@@ -306,7 +305,7 @@ void addSelection(Image& img) {
 	}
 
 
-	Selection select(name,rectangles);
+	Selection select(name, rectangles);
 
 	img.addSelect(select);
 }
@@ -402,7 +401,7 @@ void doOperation(Image& img) {
 	}
 	else {
 		unsigned i = 0;
-		for (auto& op: img.getOperations()) {
+		for (auto& op : img.getOperations()) {
 			cout << ++i << ". " << op.getName() << endl;
 		}
 		unsigned c;
@@ -416,7 +415,7 @@ void doOperation(Image& img) {
 	}
 }
 
-void addOperation(Image& img){
+void addOperation(Image& img) {
 	img.setSaved(0);
 
 	string name;
@@ -430,7 +429,7 @@ void addOperation(Image& img){
 		cerr << "Try Again" << endl; cin.clear();
 		cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	}
-	
+
 	vector<Operation*> operations;
 	for (unsigned i = 0; i < c; i++) {
 		cout << "Which operation?" << endl;
@@ -486,9 +485,9 @@ void addOperation(Image& img){
 		else if (c == 16) {
 			int r, g, b, a;
 			cin >> r >> g >> b >> a;
-			operations.push_back(new Fill(r,g,b,a));
+			operations.push_back(new Fill(r, g, b, a));
 		}
-		else if (c == 17){
+		else if (c == 17) {
 			unsigned b = 0;
 			for (auto& op : img.getOperations()) {
 				cout << ++b << ". " << op.getName() << endl;
@@ -535,15 +534,14 @@ void savePicture(Image& img) {
 
 		size_t bmp, pam, json;
 
-		bmp = path.find(".bmp");
-		pam = path.find(".pam");
-		json = path.find(".json");
+		bmp = boost::algorithm::to_lower_copy(path).find(".bmp");
+		pam = boost::algorithm::to_lower_copy(path).find(".pam");
 
-		if (bmp != string::npos && (pam == string::npos || pam < bmp) && (json == string::npos || json < bmp)) {
+		if (bmp != string::npos && (pam == string::npos || pam < bmp)) {
 			BMPFormatter form(path);
 			form << img;
 		}
-		else if (pam != string::npos && (json == string::npos || json < pam)) {
+		else if (pam != string::npos) {
 			PAMFormatter form(path);
 			form << img;
 		}
@@ -580,9 +578,9 @@ void javaMode(Image& img, int argc, char* argv[]) {
 
 	size_t bmp, pam, json;
 
-	bmp = path.find(".bmp");
-	pam = path.find(".pam");
-	json = path.find(".json");
+	bmp = boost::algorithm::to_lower_copy(path).find(".bmp");
+	pam = boost::algorithm::to_lower_copy(path).find(".pam");
+	json = boost::algorithm::to_lower_copy(path).find(".json");
 	try {
 		if (bmp != string::npos && (pam == string::npos || pam < bmp) && (json == string::npos || json < bmp)) {
 			BMPFormatter form(path);
@@ -768,7 +766,8 @@ void editImage(Image* img, volatile bool* running, volatile bool* update, volati
 	*running = false;
 }
 
-int updateWindow(Image& img, SDL_Window* window, SDL_Renderer* renderer) {
+int updateWindow(Image& img, SDL_Window* window, SDL_Renderer* renderer
+	, bool mouseDown, int sx, int sy, int dx, int dy) {
 
 	SDL_RenderClear(renderer);
 
@@ -776,12 +775,48 @@ int updateWindow(Image& img, SDL_Window* window, SDL_Renderer* renderer) {
 
 	pixels = new unsigned char[4 * img.getHeight() * img.getWidth()];
 
+	bool sel;
 	for (int i = 0; i < img.getHeight(); ++i) {
 		for (int j = 0; j < img.getWidth(); ++j) {
-			pixels[(i * img.getWidth() + j) * 4    ] = img.get(i, j).getR();
-			pixels[(i * img.getWidth() + j) * 4 + 1] = img.get(i, j).getG();
-			pixels[(i * img.getWidth() + j) * 4 + 2] = img.get(i, j).getB();
-			pixels[(i * img.getWidth() + j) * 4 + 3] = img.get(i, j).getA() * 255 / 100;
+			sel = 0;
+			if (img.getActiveSelection()) {
+				for (auto& r : img.getActiveSelection()->getRectangles()) {
+					if (r.getX() <= j && r.getX() + r.getWidth() >= j && (r.getY() == i || r.getY() == i + r.getHeight())) {
+						sel = 1;
+						break;
+					}
+					else if (r.getY() >= i && r.getY() < i + r.getHeight() && (r.getX() == j || r.getX() + r.getWidth() == j)) {
+						sel = 1;
+						break;
+					}
+				}
+			}
+			if (mouseDown) {
+				int width  = abs(sx - dx);
+				int height = abs(sy - dy);
+				int x      = fmin(sx, dx);
+				int y      = fmax(sy, dy);
+
+				if (x <= j && x + width >= j && (y == i || y == i + height)) {
+					sel = 1;
+				}
+				else if (y >= i && y < i + height && (x == j || x + width == j)) {
+					sel = 1;
+				}
+
+			}
+			if (sel) {
+				pixels[(i * img.getWidth() + j) * 4] = 255;
+				pixels[(i * img.getWidth() + j) * 4 + 1] = 0;
+				pixels[(i * img.getWidth() + j) * 4 + 2] = 255;
+				pixels[(i * img.getWidth() + j) * 4 + 3] = 255;
+			}
+			else {
+				pixels[(i * img.getWidth() + j) * 4] = img.get(i, j).getR();
+				pixels[(i * img.getWidth() + j) * 4 + 1] = img.get(i, j).getG();
+				pixels[(i * img.getWidth() + j) * 4 + 2] = img.get(i, j).getB();
+				pixels[(i * img.getWidth() + j) * 4 + 3] = img.get(i, j).getA() * 255 / 100;
+			}
 		}
 	}
 
@@ -822,10 +857,11 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-
 	volatile bool running = true;
 	volatile bool update = false;
 	volatile bool finished = false;
+
+	bool mouseDown = 0;
 
 	thread t (editImage ,&img ,&running, &update, &finished);
 
@@ -837,6 +873,7 @@ int main(int argc, char* argv[]) {
 	int dx = 0, dy = 0;
 	int selId = 0;
 
+	SDL_RenderPresent(renderer);
 	while (running) {
 
 		while (SDL_PollEvent(&windowEvent))
@@ -846,6 +883,7 @@ int main(int argc, char* argv[]) {
 			else if (SDL_MOUSEBUTTONDOWN == windowEvent.type) {
 				sx = windowEvent.button.x * img.getWidth() / WIDTH;
 				sy = windowEvent.button.y * img.getHeight() / HEIGHT;
+				mouseDown = 1;
 			}
 			else if (SDL_MOUSEBUTTONUP == windowEvent.type) {
 				dx = windowEvent.button.x * img.getWidth() / WIDTH;
@@ -856,16 +894,25 @@ int main(int argc, char* argv[]) {
 				rects.push_back(rect);
 				Selection sel(to_string(selId++), rects);
 				img.addSelect(sel);
+				mouseDown = 0;
+				update = 1;
+			}
+			else if (SDL_MOUSEMOTION == windowEvent.type) {
+				if (mouseDown) {
+					dx = windowEvent.motion.x* img.getWidth() / WIDTH;
+					dy = windowEvent.motion.y * img.getHeight() / HEIGHT;
+				}
+				update = 1;
 			}
 
 		
 		if (update) {
-			if (updateWindow(img, window, renderer)) {
+			if (updateWindow(img, window, renderer, mouseDown, sx, sy, dx, dy)) {
 				running = false;
 			}
 			update = false;
 		}
-		
+
 		SDL_Delay(1000 / 60);
 	}
 

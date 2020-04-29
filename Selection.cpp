@@ -55,3 +55,5 @@ void Selection::parse(const string& str) {
 }
 
 const string& Selection::getName() const { return name; }
+
+const vector<Rectangle>& Selection::getRectangles() const { return rectangles; }
