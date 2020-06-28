@@ -12,17 +12,22 @@ Selection::Selection(const string & selection_name, const vector<Rectangle> & re
 
 Selection::Selection() {}
 
-string Selection::stringify() const {
+string Selection::stringify(bool active) const {
 	
 	vector<string> rect_str;
 	for (auto& rect : rectangles) {
 		rect_str.push_back(rect.stringify());
 	}
 
-	return "{\"name\":\"" + json_escape(name) + "\",\"rects\":[" + boost::join(rect_str, ",") + "]}";
+	string ret = "{\"name\":\"" + json_escape(name) + "\",\"rects\":[" + boost::join(rect_str, ",") + "],\"active\":";
+	ret += active ? "true" : "false";
+	ret += "}";
+
+	return ret;
 }
 
 void Selection::parse(const string& str) {
+
 	regex reg("\\\"name\\\":\\\"((?:\\\\\\\"|\\\\\\\\|[^\\\\\\\"])+)\\\"");
 
 	smatch matches;
@@ -51,7 +56,6 @@ void Selection::parse(const string& str) {
 
 		m1++;
 	}
-
 }
 
 const string& Selection::getName() const { return name; }

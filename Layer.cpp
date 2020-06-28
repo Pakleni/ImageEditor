@@ -57,7 +57,14 @@ string Layer::stringify() const{
 	
 	if (width&&height > 0) pixels_str.pop_back();
 
-	pixels_str += "]}";
+	pixels_str += "],\"alpha\":";
+	pixels_str += to_string(alpha);
+	pixels_str += ",\"active\":";
+	pixels_str += active ? "true" : "false";
+	pixels_str += ",\"visible\":";
+	pixels_str += visible ? "true" : "false";
+	pixels_str += "}";
+
 	return pixels_str;
 }
 
@@ -66,7 +73,6 @@ struct InvalidFile;
 void Layer::parse(const string& str){
 
 	regex  reg("\\[([0-9]*),([0-9]*),([0-9]*),([0-9]*)\\]");
-
 
 	sregex_iterator m1(str.begin(), str.end(), reg);
 	sregex_iterator m2;
@@ -83,6 +89,28 @@ void Layer::parse(const string& str){
 
 			++m1;
 		}
+	}
+
+	regex reg1("\\\"pixels\\\":\\[(.*)\\],\\\"alpha\\\":([0-9]*),\\\"active\\\":(.*),\\\"visible\\\":(.*)");
+
+	smatch matches;
+
+	if (!regex_search(str, matches, reg1)) throw InvalidFile();
+
+	this->alpha = stoi(matches[2]);
+
+	if (!(matches[3].compare("true"))) {
+		this->active = true;
+	}
+	else {
+		this->active = false;
+	}
+
+	if (!(matches[4].compare("true"))) {
+		this->visible = true;
+	}
+	else {
+		this->visible = false;
 	}
 
 }

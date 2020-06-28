@@ -74,8 +74,8 @@ string Divide::getC() const {
 }
 
 
-ReverseDivide::ReverseDivide() : Operation("div") {};
-ReverseDivide::ReverseDivide(int _c) : Operation("div"), c(_c) {};
+ReverseDivide::ReverseDivide() : Operation("rdv") {};
+ReverseDivide::ReverseDivide(int _c) : Operation("rdv"), c(_c) {};
 
 void ReverseDivide::run_noround(Image& img) const {
 	for (auto& pix : img) { pix = pix / c; }

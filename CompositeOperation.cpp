@@ -107,9 +107,8 @@ void CompositeOperation::save(const string& path) const{
 }
 
 void CompositeOperation::parse(const string& str) {
-	
 	regex reg ("\\{\\\"name\\\":\\\"((?:\\\\\\\"|\\\\\\\\|[^\\\\\\\"])*)\\\",\\\"c\\\":\\[((?:(?:(?R)|(?:(?:[0-9]*,?)*)),?)*)\\]\\}");
-
+	
 	sregex_iterator curr(str.begin(), str.end(), reg);
 	sregex_iterator last;
 
@@ -153,11 +152,37 @@ void CompositeOperation::load(const string& path) {
 
 	smatch matches;
 	if (!regex_search(buffer.str(), matches, reg)) throw InvalidFile();
-	name = json_unescape(matches[1]);
-
+	name = json_unescape(matches[1].str());
+	string c = matches[2].str();
 	file.close();
 
-	return parse(matches[2]);
+	Operation * op = nullptr;
+
+	if (name == "add") { op = new Add(); }
+	else if (name == "sub") { op = new Subtract(); }
+	else if (name == "rsb") { op = new ReverseSubtract(); }
+	else if (name == "mul") { op = new Multiply(); }
+	else if (name == "div") { op = new Divide(); }
+	else if (name == "rdv") { op = new ReverseDivide(); }
+	else if (name == "pow") { op = new Power(); }
+	else if (name == "log") { op = new Logarithm(); }
+	else if (name == "abs") { op = new Absolute(); }
+	else if (name == "min") { op = new Minimum(); }
+	else if (name == "max") { op = new Maximum(); }
+	else if (name == "inv") { op = new Invert(); }
+	else if (name == "b&w") { op = new BlackWhite(); }
+	else if (name == "gra") { op = new Grayscale(); }
+	else if (name == "med") { op = new Median(); }
+	else if (name == "fill") { op = new Fill(); }
+
+	if (op != nullptr) {
+		op->parse(c);
+		operations.push_back(op);
+	}
+	else {
+		return parse(c);
+	}
+
 }
 
 void CompositeOperation::run(Image& img) const{

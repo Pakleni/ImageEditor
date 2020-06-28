@@ -8,7 +8,6 @@
 #include <sstream>
 #include "InvalidFile.h"
 
-
 using namespace boost;
 
 Image::Image(const Layer& layer): height(layer.getHeight()), width(layer.getWidth()){
@@ -74,7 +73,7 @@ bool Image::iterator::selected() {
 	if (!img->activeSelection)
 		return true;
 	for (auto& r : img->activeSelection->getRectangles()) {
-		if (w >= r.getX() && w < r.getX() + r.getWidth() && h <= r.getY() && (r.getY() < r.getHeight() || h > r.getY() - r.getHeight()))
+		if (w >= r.getX() && w < r.getX() + r.getWidth() && h < r.getY() && (r.getY() < r.getHeight() || h >= r.getY() - r.getHeight()))
 			return true;
 	}
 	return false;
@@ -207,7 +206,7 @@ string Image::stringify() const {
 
 	vector<string> selections_str;
 	for (auto& sel : selections) {
-		selections_str.push_back(sel.stringify());
+		selections_str.push_back(sel.stringify(activeSelection == &sel));
 	}
 
 
@@ -270,12 +269,27 @@ void Image::load(const string& path) {
 		operations.push_back(CompositeOperation(m1->str(1)));
 		++m1;
 	}
-	reg = "\\{(\\\"name\\\":\\\"(?:\\\\\\\"|\\\\\\\\|[^\\\\\\\"])*\\\",\\\"rects\\\":\\[[^\\]]*\\])\\}";
+	reg = "\\{(\\\"name\\\":\\\"(?:\\\\\\\"|\\\\\\\\|[^\\\\\\\"])*\\\",\\\"rects\\\":\\[[^\\]]*\\],\\\"active\\\":false)\\}";
+
 	m1 = sregex_iterator(matches[5].begin(), matches[5].end(), reg);
 	while (m1!=m2) {
 		selections.push_back(Selection());
 		selections.back().parse(m1->str(1));
 		++m1;
+	}
+
+	reg = "\\{(\\\"name\\\":\\\"(?:\\\\\\\"|\\\\\\\\|[^\\\\\\\"])*\\\",\\\"rects\\\":\\[[^\\]]*\\],\\\"active\\\":true)\\}";
+
+	m1 = sregex_iterator(matches[5].begin(), matches[5].end(), reg);
+
+	if (m1 != m2) {
+		selections.push_back(Selection());
+		activeSelection = &selections.back();
+
+		while (m1 != m2) {
+			selections.back().parse(m1->str(1));
+			++m1;
+		}
 	}
 
 }
